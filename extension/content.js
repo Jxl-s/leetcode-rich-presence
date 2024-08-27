@@ -19,31 +19,29 @@ function getStatus() {
         document.querySelector(".text-difficulty-medium") ||
         document.querySelector(".text-difficulty-hard");
 
+    const languageElement =
+        document.querySelector(".ant-select-selection-selected-value") ||
+        document.querySelector("button.group.font-normal > div")?.parentElement
+
     const url = getProblemUrl();
 
     if (problemTitleElement && difficultyElement) {
         const problem =
             problemTitleElement.textContent?.trim() || "Unknown Problem";
+
         const difficulty =
             difficultyElement.textContent?.trim().toLowerCase() || "hard";
 
-        // Get line count
-        const lineCount =
-            document.querySelector(".CodeMirror-code[role='presentation']") ||
-            document.querySelector(".view-lines[role='presentation']");
-
-        let totalLines = 0;
-        if (lineCount) {
-            totalLines = lineCount.children.length;
-        }
+        const language =
+            languageElement.textContent?.trim() || "Unknown Language";
 
         return {
             type: "status",
             payload: {
                 difficulty: difficulty,
                 problem: problem,
+                language: language,
                 url: url,
-                lineCount: totalLines,
             },
         };
     }

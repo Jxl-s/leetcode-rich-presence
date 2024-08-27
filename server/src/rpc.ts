@@ -10,18 +10,19 @@ import {
 } from "./constants";
 
 let rpc = new Client({ transport: "ipc" });
+let rpcReady = false;
 
 // To prevent multiple status updates
 const State = {
     problem: "",
-    problemLine: 0,
+    language: "",
     customStatus: "",
     startTime: new Date(),
 
     // Resetter function
     reset: () => {
         State.problem = "";
-        State.problemLine = 0;
+        State.language = "";
         State.customStatus = "";
         State.startTime = new Date();
     },
@@ -31,7 +32,7 @@ const statusSchema = z.object({
     difficulty: z.enum([Difficulty.Easy, Difficulty.Medium, Difficulty.Hard]),
     problem: z.string(),
     url: z.string(),
-    lineCount: z.number(),
+    language: z.string(),
 });
 
 type StatusProps = z.infer<typeof statusSchema>;
@@ -41,15 +42,15 @@ type StatusProps = z.infer<typeof statusSchema>;
  */
 export const updateStatus = async (props: StatusProps) => {
     try {
-        const { difficulty, problem, url, lineCount } =
+        const { difficulty, problem, url, language } =
             statusSchema.parse(props);
-        console.log("State: ", problem, "with", lineCount, "lines");
 
-        if (State.problem === problem && State.problemLine == lineCount) return;
+        if (!rpcReady) return;
+        if (State.problem === problem && State.language === language) return;
 
         State.reset();
         State.problem = problem;
-        State.problemLine = lineCount;
+        State.language = language;
 
         await rpc.setActivity({
             largeImageKey: "leetcode_logo",
@@ -57,7 +58,7 @@ export const updateStatus = async (props: StatusProps) => {
             smallImageKey: DIFFICULTIES[difficulty].image,
             smallImageText: DIFFICULTIES[difficulty].text,
             details: problem,
-            state: `Lines Written: ${lineCount}`,
+            state: `Language: ${language}`,
             startTimestamp: new Date(),
             buttons: [
                 {
@@ -68,9 +69,9 @@ export const updateStatus = async (props: StatusProps) => {
         });
     } catch (e) {
         if (e instanceof z.ZodError) {
-            console.error("[RPC] Validation errors:", e.errors);
+            console.error("[RPC] Validation errors in updateStatus");
         } else {
-            console.error("[RPC] Unexpected error:", e);
+            console.error("[RPC] Unexpected error in updateStatus");
         }
     }
 };
@@ -84,7 +85,8 @@ type CustomStatus = z.infer<typeof customStatus>;
 export const setCustom = async (status: CustomStatus) => {
     try {
         status = customStatus.parse(status);
-        console.log("State: ", status);
+
+        if (!rpcReady) return;
         if (State.customStatus === status) return;
 
         State.reset();
@@ -93,14 +95,14 @@ export const setCustom = async (status: CustomStatus) => {
         await rpc.setActivity({
             largeImageKey: LEETCODE_IMAGE_KEY,
             largeImageText: "LeetCode",
-            details: "Idle",
+            details: status,
             startTimestamp: new Date(),
         });
     } catch (e) {
         if (e instanceof z.ZodError) {
-            console.error("[RPC] Validation errors:", e.errors);
+            console.error("[RPC] Validation errors in setCustom");
         } else {
-            console.error("[RPC] Unexpected error:", e);
+            console.error("[RPC] Unexpected error in setCustom");
         }
     }
 };
@@ -118,18 +120,22 @@ async function login() {
 
     rpc = new Client({ transport: "ipc" });
     rpc.on("ready", () => {
+        rpcReady = true;
         console.log("[RPC] RPC ready!");
     });
 
     rpc.on("disconnected", () => {
+        rpcReady = false;
         console.log("[RPC] RPC Disconnected");
         rpc.destroy();
+
+        setTimeout(login, RETRY_DELAY);
     });
 
     try {
         await rpc.login({ clientId: CLIENT_ID });
     } catch (error) {
-        console.error("[RPC] Error logging in:", error);
+        console.error("[RPC] Error logging in");
         setTimeout(login, RETRY_DELAY);
     }
 }
