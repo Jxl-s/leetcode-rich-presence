@@ -2,23 +2,22 @@ import { createServer } from "http";
 import { WebSocketServer } from "ws";
 import { clearStatus, rpcLogin, setIdle, updateStatus } from "./rpc";
 import { port_number } from "../config.json";
-import { Difficulty } from "./types";
 
 const server = createServer();
 const wss = new WebSocketServer({ server });
 
 (async () => {
-    await rpcLogin();
-    updateStatus({
-        difficulty: Difficulty.Hard,
-        problem: "25. Reverse Nodes in k-Group",
-        url: "https://leetcode.com/problems/reverse-nodes-in-k-group",
-    });
+    try {
+        await rpcLogin();
+    } catch (error) {
+        console.error("Failed to login RPC:", error);
+        process.exit(1);
+    }
 
     wss.on("connection", (ws) => {
+        console.log("WebSocket client connected!");
         ws.on("message", (message) => {
             try {
-                // Status Updates
                 const data = JSON.parse(message.toString());
                 if (data.type === "status") {
                     updateStatus(data.payload);
@@ -26,15 +25,19 @@ const wss = new WebSocketServer({ server });
                     setIdle();
                 }
             } catch (e) {
-                console.log(e);
+                console.error("Failed to process message:", e);
             }
         });
 
         ws.on("close", () => {
-            // Handle disconnections
+            console.log("WebSocket client disconnected!");
             if (wss.clients.size <= 0) {
                 clearStatus();
             }
+        });
+
+        ws.on("error", (error) => {
+            console.error("WebSocket error:", error);
         });
     });
 

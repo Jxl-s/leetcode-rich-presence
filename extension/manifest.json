@@ -1,0 +1,20 @@
+{
+    "manifest_version": 3,
+    "name": "LeetCode Status Updater",
+    "version": "1.0",
+    "description": "Updates your status based on LeetCode activity.",
+    "permissions": ["tabs", "activeTab"],
+    "host_permissions": ["http://localhost:3124/*"],
+    "background": {
+        "service_worker": "background.js"
+    },
+    "content_scripts": [
+        {
+            "matches": ["*://leetcode.com/*"],
+            "js": ["content.js"]
+        }
+    ],
+    "action": {
+        "default_popup": "popup.html"
+    }
+}
