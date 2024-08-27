@@ -31,19 +31,20 @@ function createWebSocket() {
 createWebSocket(); // Initial connection
 
 function updateStatus(status) {
+    console.log("trying to send", status);
     if (ws && ws.readyState === WebSocket.OPEN) {
         ws.send(JSON.stringify({ type: "status", payload: status }));
     }
 }
 
 function setIdle() {
+    console.log("trying to idle");
     if (ws && ws.readyState === WebSocket.OPEN) {
         ws.send(JSON.stringify({ type: "idle" }));
     }
 }
 
-self.addEventListener("message", (event) => {
-    const message = event.data;
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.type === "updateStatus") {
         updateStatus(message.data);
     }

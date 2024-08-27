@@ -4,6 +4,7 @@ import { Difficulty } from "./types";
 import { z } from "zod";
 import { State } from "./state";
 
+const REFRESH_TIMER = 5 * 5000;
 const rpc = new RPC.Client({ transport: "ipc" });
 
 const statusSchema = z.object({
@@ -19,9 +20,15 @@ type StatusProps = z.infer<typeof statusSchema>;
 export const updateStatus = (props: StatusProps) => {
     try {
         const { difficulty, problem, url } = statusSchema.parse(props);
-        if (State.problem === problem) return;
+        if (
+            State.problem === problem &&
+            Date.now() - State.last_update <= REFRESH_TIMER
+        )
+            return;
+
         State.idle = false;
         State.problem = problem;
+        State.last_update = Date.now();
 
         rpc.setActivity({
             largeImageKey: "leetcode_logo",
@@ -50,9 +57,12 @@ export const updateStatus = (props: StatusProps) => {
  * Sets the status to idle
  */
 export const setIdle = () => {
-    if (State.idle === true) return;
+    if (State.idle === true && Date.now() - State.last_update <= REFRESH_TIMER)
+        return;
+
     State.idle = true;
     State.problem = "";
+    State.last_update = Date.now();
 
     rpc.setActivity({
         largeImageKey: "leetcode_logo",

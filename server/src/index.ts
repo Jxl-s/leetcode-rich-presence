@@ -17,6 +17,8 @@ const wss = new WebSocketServer({ server });
     wss.on("connection", (ws) => {
         console.log("WebSocket client connected!");
         ws.on("message", (message) => {
+            console.log("message received", message.toString());
+
             try {
                 const data = JSON.parse(message.toString());
                 if (data.type === "status") {
