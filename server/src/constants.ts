@@ -21,3 +21,4 @@ export const DIFFICULTIES = {
 
 // Delay (discord RPC)
 export const RETRY_DELAY = 30 * 1000;
+export const PING_GRACE_PERIOD = 5 * 1000;

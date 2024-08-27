@@ -6,6 +6,7 @@ import {
     CLIENT_ID,
     DIFFICULTIES,
     LEETCODE_IMAGE_KEY,
+    PING_GRACE_PERIOD,
     RETRY_DELAY,
 } from "./constants";
 
@@ -14,17 +15,19 @@ let rpcReady = false;
 
 // To prevent multiple status updates
 const State = {
+    // State in the rich presence
     problem: "",
     language: "",
     customStatus: "",
-    startTime: new Date(),
+
+    // State in the extension
+    previousPing: 0,
 
     // Resetter function
     reset: () => {
         State.problem = "";
         State.language = "";
         State.customStatus = "";
-        State.startTime = new Date();
     },
 };
 
@@ -51,6 +54,7 @@ export const updateStatus = async (props: StatusProps) => {
         State.reset();
         State.problem = problem;
         State.language = language;
+        State.previousPing = Date.now();
 
         await rpc.setActivity({
             largeImageKey: "leetcode_logo",
@@ -91,6 +95,7 @@ export const setCustom = async (status: CustomStatus) => {
 
         State.reset();
         State.customStatus = status;
+        State.previousPing = Date.now();
 
         await rpc.setActivity({
             largeImageKey: LEETCODE_IMAGE_KEY,
@@ -139,5 +144,12 @@ async function login() {
         setTimeout(login, RETRY_DELAY);
     }
 }
+
+// Clear status if the user is inactive
+setInterval(() => {
+    if (Date.now() - State.previousPing > PING_GRACE_PERIOD) {
+        clearStatus();
+    }
+}, 1000);
 
 login();
