@@ -57,8 +57,8 @@ export const setIdle = () => {
     State.problem = "";
 
     rpc.setActivity({
-        largeImageKey: "leetcode_logo",
-        largeImageText: config.image,
+        largeImageKey: config.image,
+        largeImageText: "LeetCode",
         details: "Idle",
         startTimestamp: new Date(),
     });
