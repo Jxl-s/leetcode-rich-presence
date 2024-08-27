@@ -11,5 +11,6 @@ It works through a browser extension that obtains information, and a websocket s
 
 - Containerize the server with Docker (easier to run)
 - Add instructions for the browser extension (upload to Chrome Web Store too maybe?)
+- Firefox support
 - Fix Discord's RPC issues with timeouts (and rate-limits)
 - Make a web dashboard to manage the server (and maybe remove the auto-try-login feature)
