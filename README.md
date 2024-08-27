@@ -9,7 +9,7 @@ It works through a browser extension that obtains information, and a websocket s
 
 # TODO List
 
-- Containerize the server with Docker (easier to run)
+- ~~Containerize the server with Docker~~ (I forgot that the Discord client has to be running on the same host)
 - Add instructions for the browser extension (upload to Chrome Web Store too maybe?)
 - Firefox support
 - Fix Discord's RPC issues with timeouts (and rate-limits)
