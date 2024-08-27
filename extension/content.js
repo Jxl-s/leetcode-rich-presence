@@ -1,3 +1,11 @@
+function getProblemUrl() {
+    const parts = window.location.href.split("/");
+    const baseIndex = parts.indexOf("problems") + 1;
+
+    const baseUrl = parts.slice(0, baseIndex + 1).join("/");
+    return baseUrl;
+}
+
 function getStatus() {
     const problemTitleElement =
         document.querySelector("div[data-cy='question-title']") ||
@@ -11,7 +19,7 @@ function getStatus() {
         document.querySelector(".text-difficulty-medium") ||
         document.querySelector(".text-difficulty-hard");
 
-    const url = window.location.href.split("?")[0];
+    const url = getProblemUrl();
 
     if (problemTitleElement && difficultyElement) {
         const problem =
