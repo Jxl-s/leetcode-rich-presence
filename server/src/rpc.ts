@@ -5,11 +5,13 @@ import { z } from "zod";
 import { State } from "./state";
 
 const rpc = new RPC.Client({ transport: "ipc" });
+let rpcReady = false;
 
 const statusSchema = z.object({
     difficulty: z.enum([Difficulty.Easy, Difficulty.Medium, Difficulty.Hard]),
     problem: z.string(),
     url: z.string(),
+    lineCount: z.number(),
 });
 
 type StatusProps = z.infer<typeof statusSchema>;
@@ -19,10 +21,13 @@ type StatusProps = z.infer<typeof statusSchema>;
  */
 export const updateStatus = async (props: StatusProps) => {
     try {
-        const { difficulty, problem, url } = statusSchema.parse(props);
-        if (State.problem === problem) return;
+        const { difficulty, problem, url, lineCount } =
+            statusSchema.parse(props);
+        // console.log("State: ", problem, "with", lineCount, "lines");
 
-        State.idle = false;
+        if (State.problem === problem || !rpcReady) return;
+
+        State.reset();
         State.problem = problem;
 
         await rpc.setActivity({
@@ -31,6 +36,7 @@ export const updateStatus = async (props: StatusProps) => {
             smallImageKey: config.difficulties[difficulty].image,
             smallImageText: config.difficulties[difficulty].text,
             details: problem,
+            state: `Lines Written: ${lineCount}`,
             startTimestamp: new Date(),
             buttons: [
                 {
@@ -41,39 +47,66 @@ export const updateStatus = async (props: StatusProps) => {
         });
     } catch (e) {
         if (e instanceof z.ZodError) {
-            console.error("Validation errors:", e.errors);
+            console.error("[RPC] Validation errors:", e.errors);
         } else {
-            console.error("Unexpected error:", e);
+            console.error("[RPC] Unexpected error:", e);
         }
     }
 };
 
+const customStatus = z.enum(["Idle", "Browsing"]);
+type CustomStatus = z.infer<typeof customStatus>;
+
 /**
  * Sets the status to idle
  */
-export const setIdle = async () => {
-    if (State.idle === true) return;
+export const setCustom = async (status: CustomStatus) => {
+    try {
+        status = customStatus.parse(status);
+        // console.log("State: ", status);
+        if (State.customStatus === status || !rpcReady) return;
 
-    State.idle = true;
-    State.problem = "";
+        State.reset();
+        State.customStatus = status;
 
-    await rpc.setActivity({
-        largeImageKey: config.image,
-        largeImageText: "LeetCode",
-        details: "Idle",
-        startTimestamp: new Date(),
-    });
+        await rpc.setActivity({
+            largeImageKey: config.image,
+            largeImageText: "LeetCode",
+            details: "Idle",
+            startTimestamp: new Date(),
+        });
+    } catch (e) {
+        if (e instanceof z.ZodError) {
+            console.error("[RPC] Validation errors:", e.errors);
+        } else {
+            console.error("[RPC] Unexpected error:", e);
+        }
+    }
 };
 
 /**
  * When the user leaves the web page
  */
 export const clearStatus = () => {
-    rpc.clearActivity();
+    if (rpcReady) {
+        rpc.clearActivity();
+    }
+
+    State.reset();
 };
 
 rpc.on("ready", () => {
-    console.log("RPC ready!");
+    rpcReady = true;
+    console.log("[RPC] RPC ready!");
 });
 
-export const rpcLogin = async () => rpc.login({ clientId: config.client_id });
+rpc.on("disconnected", () => {
+    rpcReady = false;
+    console.log("[RPC] RPC Disconnected");
+});
+
+rpc.login({ clientId: config.client_id })
+    .then(() => {
+        rpcReady = true;
+    })
+    .catch(console.error);

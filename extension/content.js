@@ -27,18 +27,30 @@ function getStatus() {
         const difficulty =
             difficultyElement.textContent?.trim().toLowerCase() || "hard";
 
+        // Get line count
+        const lineCount =
+            document.querySelector(".CodeMirror-code[role='presentation']") ||
+            document.querySelector(".view-lines[role='presentation']");
+
+        let totalLines = 0;
+        if (lineCount) {
+            totalLines = lineCount.children.length;
+        }
+
         return {
             type: "status",
             payload: {
                 difficulty: difficulty,
                 problem: problem,
                 url: url,
+                lineCount: totalLines,
             },
         };
     }
 
     return {
-        type: "idle",
+        type: "custom",
+        payload: "Idle",
     };
 }
 
@@ -51,8 +63,11 @@ function sendStatusUpdate() {
             type: "updateStatus",
             data: status.payload,
         });
-    } else if (status.type === "idle") {
-        chrome.runtime.sendMessage({ type: "setIdle" });
+    } else if (status.type === "custom") {
+        chrome.runtime.sendMessage({
+            type: "setCustom",
+            data: status.payload,
+        });
     }
 }
 

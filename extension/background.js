@@ -37,10 +37,9 @@ function updateStatus(status) {
     }
 }
 
-function setIdle() {
-    console.log("trying to idle");
+function setCustom(status) {
     if (ws && ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify({ type: "idle" }));
+        ws.send(JSON.stringify({ type: "custom", payload: status }));
     }
 }
 
@@ -49,7 +48,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         updateStatus(message.data);
     }
 
-    if (message.type === "setIdle") {
-        setIdle();
+    if (message.type === "setCustom") {
+        setCustom(message.data);
     }
 });

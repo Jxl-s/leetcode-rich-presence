@@ -1,4 +1,10 @@
 export const State = {
     problem: "",
-    idle: false,
+    customStatus: "",
+
+    // Resetter function
+    reset: () => {
+        State.problem = "";
+        State.customStatus = "";
+    },
 };
