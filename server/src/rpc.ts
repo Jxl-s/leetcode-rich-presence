@@ -1,11 +1,31 @@
-import RPC from "discord-rpc";
+import { Client } from "discord-rpc";
 import { Difficulty } from "./types";
 import { z } from "zod";
-import { State } from "./state";
-import { DIFFICULTIES, LEETCODE_IMAGE_KEY } from "./constants";
 
-export const rpc = new RPC.Client({ transport: "ipc" });
-let rpcReady = false;
+import {
+    CLIENT_ID,
+    DIFFICULTIES,
+    LEETCODE_IMAGE_KEY,
+    RETRY_DELAY,
+} from "./constants";
+
+let rpc = new Client({ transport: "ipc" });
+
+// To prevent multiple status updates
+const State = {
+    problem: "",
+    problemLine: 0,
+    customStatus: "",
+    startTime: new Date(),
+
+    // Resetter function
+    reset: () => {
+        State.problem = "";
+        State.problemLine = 0;
+        State.customStatus = "";
+        State.startTime = new Date();
+    },
+};
 
 const statusSchema = z.object({
     difficulty: z.enum([Difficulty.Easy, Difficulty.Medium, Difficulty.Hard]),
@@ -21,13 +41,15 @@ type StatusProps = z.infer<typeof statusSchema>;
  */
 export const updateStatus = async (props: StatusProps) => {
     try {
-        const { difficulty, problem, url, lineCount } = statusSchema.parse(props);
+        const { difficulty, problem, url, lineCount } =
+            statusSchema.parse(props);
         console.log("State: ", problem, "with", lineCount, "lines");
 
-        if (State.problem === problem || !rpcReady) return;
+        if (State.problem === problem && State.problemLine == lineCount) return;
 
         State.reset();
         State.problem = problem;
+        State.problemLine = lineCount;
 
         await rpc.setActivity({
             largeImageKey: "leetcode_logo",
@@ -63,7 +85,7 @@ export const setCustom = async (status: CustomStatus) => {
     try {
         status = customStatus.parse(status);
         console.log("State: ", status);
-        if (State.customStatus === status || !rpcReady) return;
+        if (State.customStatus === status) return;
 
         State.reset();
         State.customStatus = status;
@@ -87,19 +109,29 @@ export const setCustom = async (status: CustomStatus) => {
  * When the user leaves the web page
  */
 export const clearStatus = () => {
-    if (rpcReady) {
-        rpc.clearActivity();
-    }
-
     State.reset();
+    rpc.clearActivity();
 };
 
-rpc.on("ready", () => {
-    rpcReady = true;
-    console.log("[RPC] RPC ready!");
-});
+async function login() {
+    State.reset();
 
-rpc.on("disconnected", () => {
-    rpcReady = false;
-    console.log("[RPC] RPC Disconnected");
-});
+    rpc = new Client({ transport: "ipc" });
+    rpc.on("ready", () => {
+        console.log("[RPC] RPC ready!");
+    });
+
+    rpc.on("disconnected", () => {
+        console.log("[RPC] RPC Disconnected");
+        rpc.destroy();
+    });
+
+    try {
+        await rpc.login({ clientId: CLIENT_ID });
+    } catch (error) {
+        console.error("[RPC] Error logging in:", error);
+        setTimeout(login, RETRY_DELAY);
+    }
+}
+
+login();
