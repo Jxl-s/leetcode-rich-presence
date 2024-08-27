@@ -16,15 +16,15 @@ const wss = new WebSocketServer({ server });
 
     wss.on("connection", (ws) => {
         console.log("WebSocket client connected!");
-        ws.on("message", (message) => {
+        ws.on("message", async (message) => {
             console.log("message received", message.toString());
 
             try {
                 const data = JSON.parse(message.toString());
                 if (data.type === "status") {
-                    updateStatus(data.payload);
+                    await updateStatus(data.payload);
                 } else if (data.type === "idle") {
-                    setIdle();
+                    await setIdle();
                 }
             } catch (e) {
                 console.error("Failed to process message:", e);

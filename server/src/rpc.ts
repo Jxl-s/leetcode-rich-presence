@@ -13,10 +13,11 @@ const statusSchema = z.object({
 });
 
 type StatusProps = z.infer<typeof statusSchema>;
+
 /**
  * Updates the problem being solved
  */
-export const updateStatus = (props: StatusProps) => {
+export const updateStatus = async (props: StatusProps) => {
     try {
         const { difficulty, problem, url } = statusSchema.parse(props);
         if (State.problem === problem) return;
@@ -24,7 +25,7 @@ export const updateStatus = (props: StatusProps) => {
         State.idle = false;
         State.problem = problem;
 
-        rpc.setActivity({
+        await rpc.setActivity({
             largeImageKey: "leetcode_logo",
             largeImageText: config.image,
             smallImageKey: config.difficulties[difficulty].image,
@@ -50,13 +51,13 @@ export const updateStatus = (props: StatusProps) => {
 /**
  * Sets the status to idle
  */
-export const setIdle = () => {
+export const setIdle = async () => {
     if (State.idle === true) return;
 
     State.idle = true;
     State.problem = "";
 
-    rpc.setActivity({
+    await rpc.setActivity({
         largeImageKey: config.image,
         largeImageText: "LeetCode",
         details: "Idle",
