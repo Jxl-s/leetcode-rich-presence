@@ -1,12 +1,44 @@
-import http from "http";
+import { createServer } from "http";
+import { WebSocketServer } from "ws";
+import { clearStatus, rpcLogin, setIdle, updateStatus } from "./rpc";
+import { port_number } from "../config.json";
+import { Difficulty } from "./types";
 
-const server = http.createServer((req, res) => {
-    res.statusCode = 200;
-    res.setHeader("Content-Type", "text/plain");
-    res.end("Hello, World!\n");
-});
+const server = createServer();
+const wss = new WebSocketServer({ server });
 
-const port = 3000;
-server.listen(port, () => {
-    console.log(`Server running at http://localhost:${port}/`);
-});
+(async () => {
+    await rpcLogin();
+    updateStatus({
+        difficulty: Difficulty.Hard,
+        problem: "25. Reverse Nodes in k-Group",
+        url: "https://leetcode.com/problems/reverse-nodes-in-k-group",
+    });
+
+    wss.on("connection", (ws) => {
+        ws.on("message", (message) => {
+            try {
+                // Status Updates
+                const data = JSON.parse(message.toString());
+                if (data.type === "status") {
+                    updateStatus(data.payload);
+                } else if (data.type === "idle") {
+                    setIdle();
+                }
+            } catch (e) {
+                console.log(e);
+            }
+        });
+
+        ws.on("close", () => {
+            // Handle disconnections
+            if (wss.clients.size <= 0) {
+                clearStatus();
+            }
+        });
+    });
+
+    server.listen(port_number, () => {
+        console.log(`WebSocket server ready at port ${port_number}!`);
+    });
+})();

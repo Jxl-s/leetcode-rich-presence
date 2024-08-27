@@ -1,0 +1,19 @@
+{
+    "client_id": "1278012504186032149",
+    "image": "leetcode_logo",
+    "difficulties": {
+        "easy": {
+            "text": "Easy",
+            "image": "easy"
+        },
+        "medium": {
+            "text": "Medium",
+            "image": "medium"
+        },
+        "hard": {
+            "text": "Hard",
+            "image": "hard"
+        }
+    },
+    "port_number": 3124
+}
