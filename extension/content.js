@@ -17,8 +17,7 @@ function getStatus() {
         const problem =
             problemTitleElement.textContent?.trim() || "Unknown Problem";
         const difficulty =
-            difficultyElement.textContent?.trim().toLowerCase() ||
-            "Unknown Difficulty";
+            difficultyElement.textContent?.trim().toLowerCase() || "hard";
 
         return {
             type: "status",
