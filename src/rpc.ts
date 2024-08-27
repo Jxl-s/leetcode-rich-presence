@@ -2,6 +2,7 @@ import RPC from "discord-rpc";
 import config from "../config.json";
 import { Difficulty } from "./types";
 import { z } from "zod";
+import { State } from "./state";
 
 const rpc = new RPC.Client({ transport: "ipc" });
 
@@ -16,9 +17,11 @@ type StatusProps = z.infer<typeof statusSchema>;
  * Updates the problem being solved
  */
 export const updateStatus = (props: StatusProps) => {
-    console.log("Updating status:", props);
     try {
         const { difficulty, problem, url } = statusSchema.parse(props);
+        if (State.problem === problem) return;
+        State.idle = false;
+        State.problem = problem;
 
         rpc.setActivity({
             largeImageKey: "leetcode_logo",
@@ -47,6 +50,10 @@ export const updateStatus = (props: StatusProps) => {
  * Sets the status to idle
  */
 export const setIdle = () => {
+    if (State.idle === true) return;
+    State.idle = true;
+    State.problem = "";
+
     rpc.setActivity({
         largeImageKey: "leetcode_logo",
         largeImageText: config.image,

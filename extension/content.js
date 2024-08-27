@@ -15,7 +15,7 @@ function getStatus() {
         document.querySelector(".text-difficulty-medium") ||
         document.querySelector(".text-difficulty-hard");
 
-    const url = window.location.href;
+    const url = window.location.href.split("?")[0];
 
     if (problemTitleElement && difficultyElement) {
         const problem = problemTitleElement.textContent.trim();

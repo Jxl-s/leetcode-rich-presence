@@ -1,16 +1,32 @@
-const ws = new WebSocket("ws://localhost:3124");
+const RECONNECT_INTERVAL = 5000; // 5 seconds
 
-ws.onopen = () => {
-    console.log("WebSocket connection opened");
-};
+let ws;
 
-ws.onmessage = (event) => {
-    console.log("Received message from server:", event.data);
-};
+function createWebSocket() {
+    try {
+        ws = new WebSocket("ws://localhost:3124");
 
-ws.onerror = (error) => {
-    console.error("WebSocket error:", error);
-};
+        ws.onopen = () => {
+            console.log("WebSocket connection opened");
+        };
+
+        ws.onmessage = (event) => {
+            console.log("Received message from server:", event.data);
+        };
+
+        ws.onerror = (error) => {
+            console.error("WebSocket error:", error);
+        };
+
+        ws.onclose = (event) => {
+            console.log("WebSocket connection closed:", event.reason);
+            // Attempt to reconnect after a delay
+            setTimeout(createWebSocket, RECONNECT_INTERVAL);
+        };
+    } catch (e) {}
+}
+
+createWebSocket(); // Initial connection
 
 function updateStatus(status) {
     if (ws.readyState === WebSocket.OPEN) {
