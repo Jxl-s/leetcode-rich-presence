@@ -20,27 +20,30 @@ function createWebSocket() {
 
         ws.onclose = (event) => {
             console.log("WebSocket connection closed:", event.reason);
-            // Attempt to reconnect after a delay
+            ws = null;
             setTimeout(createWebSocket, RECONNECT_INTERVAL);
         };
-    } catch (e) {}
+    } catch (e) {
+        console.error("Error creating WebSocket:", e);
+    }
 }
 
 createWebSocket(); // Initial connection
 
 function updateStatus(status) {
-    if (ws.readyState === WebSocket.OPEN) {
+    if (ws && ws.readyState === WebSocket.OPEN) {
         ws.send(JSON.stringify({ type: "status", payload: status }));
     }
 }
 
 function setIdle() {
-    if (ws.readyState === WebSocket.OPEN) {
+    if (ws && ws.readyState === WebSocket.OPEN) {
         ws.send(JSON.stringify({ type: "idle" }));
     }
 }
 
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+self.addEventListener("message", (event) => {
+    const message = event.data;
     if (message.type === "updateStatus") {
         updateStatus(message.data);
     }

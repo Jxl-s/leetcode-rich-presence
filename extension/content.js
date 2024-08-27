@@ -1,16 +1,12 @@
 function getStatus() {
     const problemTitleElement =
-        // Old layout
         document.querySelector("div[data-cy='question-title']") ||
-        // New layout
         document.querySelector(".text-title-large");
 
     const difficultyElement =
-        // Old layout
         document.querySelector("div[diff='easy']") ||
         document.querySelector("div[diff='medium']") ||
         document.querySelector("div[diff='hard']") ||
-        // New layout
         document.querySelector(".text-difficulty-easy") ||
         document.querySelector(".text-difficulty-medium") ||
         document.querySelector(".text-difficulty-hard");
@@ -18,8 +14,11 @@ function getStatus() {
     const url = window.location.href.split("?")[0];
 
     if (problemTitleElement && difficultyElement) {
-        const problem = problemTitleElement.textContent.trim();
-        const difficulty = difficultyElement.textContent.trim().toLowerCase();
+        const problem =
+            problemTitleElement.textContent?.trim() || "Unknown Problem";
+        const difficulty =
+            difficultyElement.textContent?.trim().toLowerCase() ||
+            "Unknown Difficulty";
 
         return {
             type: "status",
