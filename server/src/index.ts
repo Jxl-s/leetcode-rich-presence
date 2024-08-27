@@ -1,7 +1,7 @@
 import { createServer } from "http";
 import { WebSocketServer } from "ws";
 import { clearStatus, setCustom, updateStatus } from "./rpc";
-import { port_number } from "../config.json";
+import { PORT_NUMBER } from "./constants";
 
 const server = createServer();
 const wss = new WebSocketServer({ server });
@@ -34,7 +34,7 @@ const wss = new WebSocketServer({ server });
         });
     });
 
-    server.listen(port_number, () => {
-        console.log(`WebSocket server ready at port ${port_number}!`);
+    server.listen(PORT_NUMBER, () => {
+        console.log(`WebSocket server ready at port ${PORT_NUMBER}!`);
     });
 })();

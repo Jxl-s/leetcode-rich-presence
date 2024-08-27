@@ -1,10 +1,10 @@
 import RPC from "discord-rpc";
-import config from "../config.json";
 import { Difficulty } from "./types";
 import { z } from "zod";
 import { State } from "./state";
+import { DIFFICULTIES, LEETCODE_IMAGE_KEY } from "./constants";
 
-const rpc = new RPC.Client({ transport: "ipc" });
+export const rpc = new RPC.Client({ transport: "ipc" });
 let rpcReady = false;
 
 const statusSchema = z.object({
@@ -21,9 +21,8 @@ type StatusProps = z.infer<typeof statusSchema>;
  */
 export const updateStatus = async (props: StatusProps) => {
     try {
-        const { difficulty, problem, url, lineCount } =
-            statusSchema.parse(props);
-        // console.log("State: ", problem, "with", lineCount, "lines");
+        const { difficulty, problem, url, lineCount } = statusSchema.parse(props);
+        console.log("State: ", problem, "with", lineCount, "lines");
 
         if (State.problem === problem || !rpcReady) return;
 
@@ -32,9 +31,9 @@ export const updateStatus = async (props: StatusProps) => {
 
         await rpc.setActivity({
             largeImageKey: "leetcode_logo",
-            largeImageText: config.image,
-            smallImageKey: config.difficulties[difficulty].image,
-            smallImageText: config.difficulties[difficulty].text,
+            largeImageText: LEETCODE_IMAGE_KEY,
+            smallImageKey: DIFFICULTIES[difficulty].image,
+            smallImageText: DIFFICULTIES[difficulty].text,
             details: problem,
             state: `Lines Written: ${lineCount}`,
             startTimestamp: new Date(),
@@ -63,14 +62,14 @@ type CustomStatus = z.infer<typeof customStatus>;
 export const setCustom = async (status: CustomStatus) => {
     try {
         status = customStatus.parse(status);
-        // console.log("State: ", status);
+        console.log("State: ", status);
         if (State.customStatus === status || !rpcReady) return;
 
         State.reset();
         State.customStatus = status;
 
         await rpc.setActivity({
-            largeImageKey: config.image,
+            largeImageKey: LEETCODE_IMAGE_KEY,
             largeImageText: "LeetCode",
             details: "Idle",
             startTimestamp: new Date(),
@@ -104,9 +103,3 @@ rpc.on("disconnected", () => {
     rpcReady = false;
     console.log("[RPC] RPC Disconnected");
 });
-
-rpc.login({ clientId: config.client_id })
-    .then(() => {
-        rpcReady = true;
-    })
-    .catch(console.error);
