@@ -44,6 +44,8 @@ type StatusProps = z.infer<typeof statusSchema>;
  * Updates the problem being solved
  */
 export const updateStatus = async (props: StatusProps) => {
+    State.previousPing = Date.now();
+
     try {
         const { difficulty, problem, url, language } =
             statusSchema.parse(props);
@@ -54,7 +56,6 @@ export const updateStatus = async (props: StatusProps) => {
         State.reset();
         State.problem = problem;
         State.language = language;
-        State.previousPing = Date.now();
 
         await rpc.setActivity({
             largeImageKey: "leetcode_logo",
@@ -87,6 +88,8 @@ type CustomStatus = z.infer<typeof customStatus>;
  * Sets the status to idle
  */
 export const setCustom = async (status: CustomStatus) => {
+    State.previousPing = Date.now();
+
     try {
         status = customStatus.parse(status);
 
@@ -95,7 +98,6 @@ export const setCustom = async (status: CustomStatus) => {
 
         State.reset();
         State.customStatus = status;
-        State.previousPing = Date.now();
 
         await rpc.setActivity({
             largeImageKey: LEETCODE_IMAGE_KEY,
