@@ -42,13 +42,13 @@ function getStatus() {
         const url = getProblemUrl();
 
         const problem =
-            problemTitleElement.textContent?.trim() || "Unknown Problem";
+            problemTitleElement?.textContent?.trim() || "Unknown Problem";
 
         const difficulty =
-            difficultyElement.textContent?.trim().toLowerCase() || "hard";
+            difficultyElement?.textContent?.trim().toLowerCase() || "hard";
 
         const language =
-            languageElement.textContent?.trim() || "Unknown Language";
+            languageElement?.textContent?.trim() || "Unknown Language";
 
         return {
             type: "status",
