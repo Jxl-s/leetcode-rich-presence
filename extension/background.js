@@ -1,7 +1,6 @@
 const RECONNECT_INTERVAL = 5000; // 5 seconds
 
 let ws;
-
 function createWebSocket() {
     try {
         ws = new WebSocket("ws://localhost:3124");
@@ -43,7 +42,18 @@ function setCustom(status) {
     }
 }
 
+let windowStack = [];
+
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    console.log(windowStack, sender.tab.id);
+    if (message.type === "registerWindow") {
+        windowStack.push(sender.tab.id);
+    }
+
+    if (sender.tab.id !== windowStack[windowStack.length - 1]) {
+        return;
+    }
+
     if (message.type === "updateStatus") {
         updateStatus(message.data);
     }
@@ -51,4 +61,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.type === "setCustom") {
         setCustom(message.data);
     }
+});
+
+chrome.tabs.onRemoved.addListener((tabId, removeInfo) => {
+    windowStack = windowStack.filter((id) => id !== tabId);
 });

@@ -1,3 +1,7 @@
+chrome.runtime.sendMessage({
+    type: "registerWindow",
+});
+
 function getProblemUrl() {
     const parts = window.location.href.split("/");
     const baseIndex = parts.indexOf("problems") + 1;
