@@ -18,7 +18,10 @@ const State = {
     // State in the rich presence
     problem: "",
     language: "",
-    customStatus: "",
+    customStatus: {
+        details: "",
+        state: "",
+    },
 
     // State in the extension
     previousPing: 0,
@@ -27,7 +30,12 @@ const State = {
     reset: () => {
         State.problem = "";
         State.language = "";
-        State.customStatus = "";
+        State.customStatus = {
+            details: "",
+            state: "",
+        };
+
+        State.previousPing = Date.now();
     },
 };
 
@@ -70,6 +78,10 @@ export const updateStatus = async (props: StatusProps) => {
                     label: "View Problem",
                     url,
                 },
+                {
+                    label: "GitHub (for plugin)",
+                    url: "https://github.com/Jxl-s/leetcode-rich-presence",
+                },
             ],
         });
     } catch (e) {
@@ -81,7 +93,11 @@ export const updateStatus = async (props: StatusProps) => {
     }
 };
 
-const customStatus = z.enum(["Idle", "Browsing"]);
+const customStatus = z.object({
+    details: z.enum(["Idle", "Browsing"]),
+    state: z.string(),
+});
+
 type CustomStatus = z.infer<typeof customStatus>;
 
 /**
@@ -94,15 +110,21 @@ export const setCustom = async (status: CustomStatus) => {
         status = customStatus.parse(status);
 
         if (!rpcReady) return;
-        if (State.customStatus === status) return;
+        if (
+            State.customStatus.details === status.details &&
+            State.customStatus.state === status.state
+        )
+            return;
 
         State.reset();
-        State.customStatus = status;
+        State.customStatus.details = status.details;
+        State.customStatus.state = status.state;
 
         await rpc.setActivity({
             largeImageKey: LEETCODE_IMAGE_KEY,
             largeImageText: "LeetCode",
-            details: status,
+            details: status.details,
+            state: status.state || undefined,
             startTimestamp: new Date(),
         });
     } catch (e) {

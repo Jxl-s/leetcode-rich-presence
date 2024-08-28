@@ -7,25 +7,40 @@ function getProblemUrl() {
 }
 
 function getStatus() {
-    const problemTitleElement =
-        document.querySelector("div[data-cy='question-title']") ||
-        document.querySelector(".text-title-large");
+    const urlParts = window.location.href.split("/");
+    if (urlParts.includes("problemset")) {
+        const streakElement = document.querySelector(".popover-wrapper");
+        const streak = streakElement?.textContent?.trim() || "0";
 
-    const difficultyElement =
-        document.querySelector("div[diff='easy']") ||
-        document.querySelector("div[diff='medium']") ||
-        document.querySelector("div[diff='hard']") ||
-        document.querySelector(".text-difficulty-easy") ||
-        document.querySelector(".text-difficulty-medium") ||
-        document.querySelector(".text-difficulty-hard");
+        return {
+            type: "custom",
+            payload: {
+                details: "Browsing",
+                state: "Daily Streak: " + streak,
+            },
+        };
+    }
 
-    const languageElement =
-        document.querySelector(".ant-select-selection-selected-value") ||
-        document.querySelector("button.group.font-normal > div")?.parentElement
+    if (urlParts.includes("problems")) {
+        const problemTitleElement =
+            document.querySelector("div[data-cy='question-title']") ||
+            document.querySelector(".text-title-large");
 
-    const url = getProblemUrl();
+        const difficultyElement =
+            document.querySelector("div[diff='easy']") ||
+            document.querySelector("div[diff='medium']") ||
+            document.querySelector("div[diff='hard']") ||
+            document.querySelector(".text-difficulty-easy") ||
+            document.querySelector(".text-difficulty-medium") ||
+            document.querySelector(".text-difficulty-hard");
 
-    if (problemTitleElement && difficultyElement) {
+        const languageElement =
+            document.querySelector(".ant-select-selection-selected-value") ||
+            document.querySelector("button.group.font-normal > div")
+                ?.parentElement;
+
+        const url = getProblemUrl();
+
         const problem =
             problemTitleElement.textContent?.trim() || "Unknown Problem";
 
@@ -48,7 +63,10 @@ function getStatus() {
 
     return {
         type: "custom",
-        payload: "Idle",
+        payload: {
+            details: "Idle",
+            state: "",
+        },
     };
 }
 
@@ -56,12 +74,12 @@ getStatus();
 
 function sendStatusUpdate() {
     const status = getStatus();
-    if (status.type === "status") {
+    if (status?.type === "status") {
         chrome.runtime.sendMessage({
             type: "updateStatus",
             data: status.payload,
         });
-    } else if (status.type === "custom") {
+    } else if (status?.type === "custom") {
         chrome.runtime.sendMessage({
             type: "setCustom",
             data: status.payload,
