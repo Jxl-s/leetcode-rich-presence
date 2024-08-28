@@ -30,7 +30,6 @@ function createWebSocket() {
 createWebSocket(); // Initial connection
 
 function updateStatus(status) {
-    console.log("trying to send", status);
     if (ws && ws.readyState === WebSocket.OPEN) {
         ws.send(JSON.stringify({ type: "status", payload: status }));
     }
@@ -45,7 +44,6 @@ function setCustom(status) {
 let windowStack = [];
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    console.log(windowStack, sender.tab.id);
     if (message.type === "registerWindow") {
         windowStack.push(sender.tab.id);
     }
